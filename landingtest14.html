@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axiom — The Future of Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f4f0;
+      --mid: #888;
+      --line: rgba(0,0,0,0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--black);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid var(--black);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
+      opacity: 0.4;
+    }
+    a:hover ~ .cursor, button:hover ~ .cursor { width: 16px; height: 16px; }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 60px;
+      mix-blend-mode: normal;
+    }
+    nav::after {
+      content: '';
+      position: absolute; bottom: 0; left: 60px; right: 60px;
+      height: 1px;
+      background: var(--line);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      color: var(--black);
+    }
+    .nav-links {
+      display: flex; gap: 40px; list-style: none;
+    }
+    .nav-links a {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--black); }
+    .nav-cta {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: var(--black);
+      padding: 10px 22px;
+      border: 1px solid var(--black);
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-cta:hover { background: transparent; color: var(--black); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-top: 100px;
+      opacity: 0;
+      animation: fadeUp 1s ease 0.2s forwards;
+    }
+    .hero-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px 60px 80px 60px;
+      border-right: 1px solid var(--line);
+    }
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 32px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(52px, 6vw, 88px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      margin-bottom: 36px;
+    }
+    .hero-title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+    .hero-body {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #555;
+      max-width: 400px;
+      margin-bottom: 52px;
+    }
+    .hero-actions { display: flex; gap: 16px; align-items: center; }
+    .btn-primary {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: var(--black);
+      padding: 14px 32px;
+      border: 1px solid var(--black);
+      transition: background 0.2s, color 0.2s;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: transparent; color: var(--black); }
+    .btn-ghost {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      display: flex; align-items: center; gap: 8px;
+      transition: color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--black); }
+    .btn-ghost span { font-size: 18px; line-height: 1; }
+
+    .hero-right {
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-stat-block {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    .hero-stat {
+      background: var(--white);
+      padding: 32px 28px;
+    }
+    .hero-stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+    .hero-stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+    .hero-badge {
+      position: absolute; top: 48px; right: 52px;
+      width: 100px; height: 100px;
+      border: 1px solid var(--black);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--black);
+      line-height: 1.5;
+      animation: spin 20s linear infinite;
+      z-index: 2;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Marquee */
+    .marquee-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0;
+      background: var(--black);
+    }
+    .marquee-track {
+      display: flex; gap: 0;
+      animation: marquee 22s linear infinite;
+      white-space: nowrap;
+    }
+    .marquee-item {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--white);
+      padding: 0 40px;
+      opacity: 0.5;
+    }
+    .marquee-item.accent { opacity: 1; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* Features */
+    .features {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--line);
+      opacity: 0;
+      animation: fadeUp 1s ease 0.5s forwards;
+    }
+    .feature {
+      padding: 72px 52px;
+      border-right: 1px solid var(--line);
+      position: relative;
+    }
+    .feature:last-child { border-right: none; }
+    .feature-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--mid);
+      margin-bottom: 40px;
+    }
+    .feature-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      line-height: 1.15;
+    }
+    .feature-title em { font-style: italic; font-weight: 400; }
+    .feature-body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #666;
+    }
+    .feature-line {
+      position: absolute;
+      bottom: 0; left: 52px;
+      width: 0; height: 2px;
+      background: var(--black);
+      transition: width 0.5s ease;
+    }
+    .feature:hover .feature-line { width: calc(100% - 104px); }
+
+    /* About */
+    .about {
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 80vh;
+      opacity: 0;
+      animation: fadeUp 1s ease 0.7s forwards;
+    }
+    .about-left {
+      padding: 96px 60px;
+      border-right: 1px solid var(--line);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 28px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 24px; height: 1px;
+      background: var(--mid);
+    }
+    .about-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 4vw, 58px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      margin-bottom: 36px;
+    }
+    .about-title em { font-style: italic; font-weight: 400; }
+    .about-body {
+      font-size: 15px;
+      line-height: 1.85;
+      color: #555;
+      margin-bottom: 24px;
+    }
+    .about-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--black);
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-top: 16px;
+      border-bottom: 1px solid var(--black);
+      padding-bottom: 3px;
+      transition: opacity 0.2s;
+    }
+    .about-link:hover { opacity: 0.5; }
+
+    .about-right {
+      padding: 96px 60px;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 0;
+    }
+    .about-value {
+      padding: 36px 0;
+      border-bottom: 1px solid var(--line);
+      display: flex; gap: 28px; align-items: flex-start;
+    }
+    .about-value:first-child { border-top: 1px solid var(--line); }
+    .about-value-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--mid);
+      letter-spacing: 0.1em;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+    .about-value-content h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .about-value-content p {
+      font-size: 13px;
+      line-height: 1.75;
+      color: #666;
+    }
+
+    /* CTA */
+    .cta-section {
+      background: var(--black);
+      color: var(--white);
+      padding: 120px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .cta-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(44px, 6vw, 88px);
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .cta-title em { font-style: italic; font-weight: 400; }
+    .cta-actions { display: flex; justify-content: center; gap: 16px; position: relative; }
+    .btn-white {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--white);
+      padding: 14px 32px;
+      border: 1px solid var(--white);
+      transition: background 0.2s, color 0.2s;
+      display: inline-block;
+    }
+    .btn-white:hover { background: transparent; color: var(--white); }
+    .btn-outline-white {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: rgba(255,255,255,0.5);
+      padding: 14px 32px;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: color 0.2s, border-color 0.2s;
+      display: inline-block;
+    }
+    .btn-outline-white:hover { color: var(--white); border-color: var(--white); }
+
+    /* Footer */
+    footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 60px;
+      border-top: 1px solid var(--line);
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      color: var(--black);
+      text-decoration: none;
+    }
+    .footer-copy {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--mid);
+    }
+    .footer-links {
+      display: flex; gap: 28px; list-style: none;
+    }
+    .footer-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--black); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 24px 24px; }
+      nav::after { left: 24px; right: 24px; }
+      .nav-links { display: none; }
+      .hero, .about { grid-template-columns: 1fr; }
+      .hero-left, .about-left { border-right: none; border-bottom: 1px solid var(--line); padding: 60px 24px; }
+      .hero-right, .about-right { padding: 48px 24px; }
+      .features { grid-template-columns: 1fr; }
+      .feature { border-right: none; border-bottom: 1px solid var(--line); padding: 52px 24px; }
+      .cta-section { padding: 80px 24px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-logo" href="#">Axiom</a>
+    <ul class="nav-links">
+      <li><a href="#">Product</a></li>
+      <li><a href="#">Pricing</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#">Docs</a></li>
+    </ul>
+    <a class="nav-cta" href="#">Get Access</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-left">
+      <p class="hero-eyebrow">New — Version 2.0 is live</p>
+      <h1 class="hero-title">Build less.<br/><em>Ship</em> more.</h1>
+      <p class="hero-body">Axiom automates the invisible work that slows your team down — so you can focus on what actually matters. From pipeline to product, without the friction.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#">Start free trial</a>
+        <a class="btn-ghost" href="#">Watch demo <span>↗</span></a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-grid"></div>
+      <div class="hero-badge">Trusted<br/>by 5,000+<br/>teams</div>
+      <div class="hero-stat-block">
+        <div class="hero-stat">
+          <div class="hero-stat-num">3.2×</div>
+          <div class="hero-stat-label">Faster deployment</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">99.9%</div>
+          <div class="hero-stat-label">Uptime SLA</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">40%</div>
+          <div class="hero-stat-label">Cost reduction</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">&lt;50ms</div>
+          <div class="hero-stat-label">Avg. response time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item accent">Automate everything</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Ship faster</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item accent">No-code workflows</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Real-time analytics</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item accent">Enterprise-ready</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Zero config deploys</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Automate everything</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Ship faster</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">No-code workflows</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Real-time analytics</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Enterprise-ready</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Zero config deploys</span>
+      <span class="marquee-item">·</span>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="feature">
+      <p class="feature-num">01</p>
+      <h2 class="feature-title">Instant<br/><em>integration</em></h2>
+      <p class="feature-body">Connect your existing stack in minutes. No rewrites, no migrations. Axiom sits quietly in the background and makes everything work together.</p>
+      <div class="feature-line"></div>
+    </div>
+    <div class="feature">
+      <p class="feature-num">02</p>
+      <h2 class="feature-title">Intelligent<br/><em>automation</em></h2>
+      <p class="feature-body">Define logic once and let the system handle the rest. Conditional flows, triggers, and smart routing — all without writing a line of code.</p>
+      <div class="feature-line"></div>
+    </div>
+    <div class="feature">
+      <p class="feature-num">03</p>
+      <h2 class="feature-title">Complete<br/><em>visibility</em></h2>
+      <p class="feature-body">See everything that's running, what succeeded, what didn't, and why. A single dashboard for your entire operational surface.</p>
+      <div class="feature-line"></div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="about" id="about">
+    <div class="about-left">
+      <p class="section-label">About Axiom</p>
+      <h2 class="about-title">We build for the<br/><em>people</em> who build.</h2>
+      <p class="about-body">Axiom was founded in 2021 by engineers who were tired of spending more time managing infrastructure than shipping product. We believe the best software gets out of your way.</p>
+      <p class="about-body">Today, we serve thousands of teams — from two-person startups to publicly traded companies — who share the same belief: that great products are built on reliable, invisible foundations.</p>
+      <a class="about-link" href="#">Our story ↗</a>
+    </div>
+    <div class="about-right">
+      <div class="about-value">
+        <span class="about-value-num">01</span>
+        <div class="about-value-content">
+          <h3>Radical simplicity</h3>
+          <p>We remove complexity wherever we find it. Every feature we ship makes the product simpler, not harder.</p>
+        </div>
+      </div>
+      <div class="about-value">
+        <span class="about-value-num">02</span>
+        <div class="about-value-content">
+          <h3>Relentless reliability</h3>
+          <p>We hold ourselves to an impossible standard because the teams who depend on us hold themselves to one too.</p>
+        </div>
+      </div>
+      <div class="about-value">
+        <span class="about-value-num">03</span>
+        <div class="about-value-content">
+          <h3>Honest by default</h3>
+          <p>No dark patterns. No lock-in. We win when you succeed — that's the only business model we believe in.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <p class="cta-label">Ready when you are</p>
+    <h2 class="cta-title">Stop waiting.<br/><em>Start shipping.</em></h2>
+    <div class="cta-actions">
+      <a class="btn-white" href="#">Start for free</a>
+      <a class="btn-outline-white" href="#">Talk to sales</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <a class="footer-logo" href="#">Axiom</a>
+    <p class="footer-copy">© 2026 Axiom Technologies, Inc.</p>
+    <ul class="footer-links">
+      <li><a href="#">Privacy</a></li>
+      <li><a href="#">Terms</a></li>
+      <li><a href="#">Status</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+    });
+
+    function animateRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Intersection observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.animation = 'fadeUp 0.9s ease forwards';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.features, .about').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
