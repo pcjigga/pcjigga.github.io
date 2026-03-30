@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VANISHED — The Digital Plate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;1,300;1,700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #cc0000;
+      --red-bright: #ff1a1a;
+      --black: #080808;
+      --dark: #111111;
+      --darker: #0d0d0d;
+      --white: #f0eeea;
+      --grey: #333;
+      --mid: #777;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.15s, height 0.15s;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 32px; height: 32px;
+      border: 1px solid var(--red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      opacity: 0.5;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 500;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 52px;
+      background: linear-gradient(to bottom, rgba(8,8,8,0.98), transparent);
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.15em;
+      text-decoration: none;
+      color: var(--white);
+    }
+    .nav-logo span { color: var(--red); }
+    .nav-links {
+      display: flex; gap: 36px; list-style: none;
+    }
+    .nav-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--red); }
+    .nav-cta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: var(--red);
+      padding: 10px 24px;
+      border: 1px solid var(--red);
+      transition: background 0.2s, color 0.2s;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    }
+    .nav-cta:hover { background: transparent; color: var(--red); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 52px 80px;
+    }
+
+    /* Animated red scan line */
+    .scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0.3;
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { top: -2px; }
+      100% { top: 100%; }
+    }
+
+    /* Grid bg */
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(204,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(204,0,0,0.06) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+    /* Red glow behind product */
+    .hero-glow {
+      position: absolute;
+      right: 5%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(204,0,0,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1300px;
+    }
+
+    .hero-left { }
+
+    .hero-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 30px; height: 1px;
+      background: var(--red);
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(80px, 11vw, 160px);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      margin-bottom: 32px;
+      color: var(--white);
+    }
+    .hero-title .red { color: var(--red); }
+    .hero-title .outline {
+      -webkit-text-stroke: 1px var(--white);
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      line-height: 1.6;
+      max-width: 420px;
+      margin-bottom: 48px;
+    }
+    .hero-sub strong { color: var(--white); font-weight: 600; }
+
+    .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+    .btn-red {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: var(--red);
+      padding: 16px 36px;
+      border: 1px solid var(--red);
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      transition: background 0.2s, color 0.2s;
+      display: inline-block;
+    }
+    .btn-red:hover { background: transparent; color: var(--red); }
+
+    .btn-ghost-red {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      padding: 16px 0;
+      display: flex; align-items: center; gap: 10px;
+      transition: color 0.2s;
+    }
+    .btn-ghost-red:hover { color: var(--red); }
+
+    /* Product image */
+    .hero-right {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .product-frame {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+    }
+    .product-frame::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 1px solid rgba(204,0,0,0.4);
+      clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+    }
+    .product-frame img {
+      width: 100%;
+      display: block;
+      filter: drop-shadow(0 0 60px rgba(204,0,0,0.4));
+      clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+    }
+    .product-frame .corner {
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--red);
+      border-style: solid;
+    }
+    .corner.tl { top: -6px; left: 6px; border-width: 2px 0 0 2px; }
+    .corner.tr { top: -6px; right: 6px; border-width: 2px 2px 0 0; }
+    .corner.bl { bottom: -6px; left: 6px; border-width: 0 0 2px 2px; }
+    .corner.br { bottom: -6px; right: 6px; border-width: 0 2px 2px 0; }
+
+    .product-label {
+      position: absolute;
+      bottom: -28px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      white-space: nowrap;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      border-top: 1px solid var(--grey);
+      border-bottom: 1px solid var(--grey);
+      margin: 0;
+    }
+    .stat {
+      flex: 1;
+      padding: 36px 52px;
+      border-right: 1px solid var(--grey);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .stat:hover { background: rgba(204,0,0,0.05); }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 0.04em;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-num span { color: var(--red); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    /* Features */
+    .features-section {
+      padding: 120px 52px;
+      position: relative;
+    }
+    .section-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 72px;
+    }
+    .section-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-tag::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--red);
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 6vw, 80px);
+      letter-spacing: 0.04em;
+      line-height: 0.95;
+      color: var(--white);
+    }
+    .section-title .outline {
+      -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+      color: transparent;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--grey);
+      border: 1px solid var(--grey);
+    }
+    .feature-card {
+      background: var(--darker);
+      padding: 52px 40px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .feature-card:hover { background: #161616; }
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--red);
+      transition: width 0.4s ease;
+    }
+    .feature-card:hover::after { width: 100%; }
+    .feature-icon {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--red);
+      margin-bottom: 28px;
+    }
+    .feature-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      margin-bottom: 14px;
+    }
+    .feature-body {
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.75;
+      color: #888;
+    }
+
+    /* Product showcase */
+    .showcase {
+      padding: 0 52px 120px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .showcase-img {
+      position: relative;
+    }
+    .showcase-img img {
+      width: 100%;
+      filter: drop-shadow(0 0 80px rgba(204,0,0,0.35));
+      border: 1px solid rgba(204,0,0,0.2);
+    }
+    .showcase-img .red-line {
+      position: absolute;
+      left: -20px; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 60%;
+      background: linear-gradient(to bottom, transparent, var(--red), transparent);
+    }
+    .showcase-content { }
+    .showcase-content .section-tag { margin-bottom: 20px; }
+    .showcase-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 5vw, 68px);
+      letter-spacing: 0.04em;
+      line-height: 0.95;
+      margin-bottom: 28px;
+    }
+    .showcase-body {
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.8;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    .showcase-body strong { color: var(--white); font-weight: 600; }
+    .spec-list {
+      list-style: none;
+      margin-top: 32px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .spec-list li {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: #777;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .spec-list li::before {
+      content: '▸';
+      color: var(--red);
+      font-size: 10px;
+    }
+    .spec-list li strong { color: var(--white); }
+
+    /* Marquee */
+    .marquee-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--grey);
+      border-bottom: 1px solid var(--grey);
+      padding: 20px 0;
+      background: var(--red);
+    }
+    .marquee-track {
+      display: flex;
+      animation: marquee 18s linear infinite;
+      white-space: nowrap;
+    }
+    .marquee-item {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      color: rgba(0,0,0,0.5);
+      padding: 0 32px;
+    }
+    .marquee-item.light { color: rgba(0,0,0,0.9); }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* CTA */
+    .cta-section {
+      padding: 140px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(204,0,0,0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .cta-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(60px, 9vw, 130px);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .cta-title .outline {
+      -webkit-text-stroke: 1px rgba(255,255,255,0.25);
+      color: transparent;
+    }
+    .cta-sub {
+      font-size: 16px;
+      color: #666;
+      letter-spacing: 0.05em;
+      margin-bottom: 52px;
+      position: relative;
+    }
+    .cta-actions { display: flex; justify-content: center; gap: 20px; position: relative; flex-wrap: wrap; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--grey);
+      padding: 36px 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.15em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .footer-logo span { color: var(--red); }
+    .footer-copy {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--mid);
+    }
+    .footer-links {
+      display: flex; gap: 28px; list-style: none;
+    }
+    .footer-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mid);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--red); }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.9s ease forwards;
+    }
+    .delay-1 { animation-delay: 0.15s; }
+    .delay-2 { animation-delay: 0.3s; }
+    .delay-3 { animation-delay: 0.45s; }
+    .delay-4 { animation-delay: 0.6s; }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 24px 60px; }
+      .hero-content { grid-template-columns: 1fr; gap: 48px; }
+      .hero-right { order: -1; }
+      .stats-bar { flex-wrap: wrap; }
+      .stat { padding: 28px 24px; min-width: 50%; }
+      .features-section { padding: 80px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .showcase { grid-template-columns: 1fr; padding: 0 24px 80px; gap: 48px; }
+      .cta-section { padding: 80px 24px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="scanline"></div>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-logo" href="#">VAN<span>IS</span>HED</a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#product">Product</a></li>
+      <li><a href="#">Shop</a></li>
+    </ul>
+    <a class="nav-cta" href="#">Order Now</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-left">
+        <p class="hero-tag fade-up">Digital Plate Technology</p>
+        <h1 class="hero-title fade-up delay-1">
+          VAN<span class="red">IS</span>HED<br/>
+          <span class="outline">ON THE</span><br/>
+          ROAD
+        </h1>
+        <p class="hero-sub fade-up delay-2">
+          The <strong>world's first digital plate</strong> built for car culture. Switch on. Switch off. Stay in control of your identity on every road, every night, every run.
+        </p>
+        <div class="hero-actions fade-up delay-3">
+          <a class="btn-red" href="#">Shop Now</a>
+          <a class="btn-ghost-red" href="#product">See How It Works →</a>
+        </div>
+      </div>
+      <div class="hero-right fade-up delay-2">
+        <div class="product-frame">
+          <img src="https://cdn.discordapp.com/attachments/961481907038715944/1487656913326968862/0368293C-EA42-421D-8A5C-5926C73B89EA.png?ex=69c9eff7&is=69c89e77&hm=06f7be7fe01c54bd6797c3b6f83e0fa498d982b5963a4ab64030449b388d8d4f&" alt="Vanished Digital Plate" />
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <p class="product-label">// VANISHED — MODEL ONE //</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar reveal">
+    <div class="stat">
+      <div class="stat-num">1<span>-TAP</span></div>
+      <div class="stat-label">On / Off Control</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100<span>%</span></div>
+      <div class="stat-label">Wireless Operation</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">FIT<span>S</span></div>
+      <div class="stat-label">All Standard Frames</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">ANY<span>CAR</span></div>
+      <div class="stat-label">Universal Compatibility</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="features-section" id="features">
+    <div class="section-header reveal">
+      <div>
+        <p class="section-tag">What sets it apart</p>
+        <h2 class="section-title">BUILT FOR THE<br/><span class="outline">CULTURE</span></h2>
+      </div>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <p class="feature-icon">// 01</p>
+        <h3 class="feature-title">Instant Toggle</h3>
+        <p class="feature-body">One button. Full control. Switch your plate on or off in an instant — no tools, no wiring, no hassle. Built for speed.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-icon">// 02</p>
+        <h3 class="feature-title">Sleek Design</h3>
+        <p class="feature-body">Low-profile, aggressive aesthetic that fits flush with any vehicle. Looks factory. Performs like nothing else on the market.</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-icon">// 03</p>
+        <h3 class="feature-title">Built Different</h3>
+        <p class="feature-body">Engineered for the car culture crowd. Not a gimmick — a statement. Every detail on Vanished is designed with intention.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item light">VANISHED</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Digital Plate</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item light">Be Unknown</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Car Culture</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item light">One Tap Control</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Stay Mysterious</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item light">VANISHED</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Digital Plate</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item light">Be Unknown</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Car Culture</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item light">One Tap Control</span>
+      <span class="marquee-item">·</span>
+      <span class="marquee-item">Stay Mysterious</span>
+      <span class="marquee-item">·</span>
+    </div>
+  </div>
+
+  <!-- Product Showcase -->
+  <section class="showcase" id="product">
+    <div class="showcase-img reveal">
+      <div class="red-line"></div>
+      <img src="https://cdn.discordapp.com/attachments/961481907038715944/1487656913326968862/0368293C-EA42-421D-8A5C-5926C73B89EA.png?ex=69c9eff7&is=69c89e77&hm=06f7be7fe01c54bd6797c3b6f83e0fa498d982b5963a4ab64030449b388d8d4f&" alt="Vanished Digital Plate Close Up" />
+    </div>
+    <div class="showcase-content reveal">
+      <p class="section-tag">The Product</p>
+      <h2 class="showcase-title">VANISHED<br/>MODEL ONE</h2>
+      <p class="showcase-body">
+        The Vanished Model One is the <strong>most aggressive digital plate on the market</strong>. Designed for the car community — the meets, the runs, the culture. Your plate, your rules.
+      </p>
+      <p class="showcase-body">
+        Every unit is precision-built to fit clean on any standard vehicle. No modifications needed. Just mount, connect, and go.
+      </p>
+      <ul class="spec-list">
+        <li><strong>Wireless toggle</strong> — on/off from your phone or remote</li>
+        <li><strong>Universal fit</strong> — standard plate dimensions</li>
+        <li><strong>Low profile</strong> — flush mount, zero bulk</li>
+        <li><strong>Durable build</strong> — weatherproof construction</li>
+        <li><strong>Night ready</strong> — high contrast visibility</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <p class="cta-label reveal">// Limited Drop</p>
+    <h2 class="cta-title reveal">
+      GET<br/>
+      <span class="outline">VANISHED</span>
+    </h2>
+    <p class="cta-sub reveal">First drop is limited. Don't sleep on it.</p>
+    <div class="cta-actions reveal">
+      <a class="btn-red" href="#">Order Now</a>
+      <a class="btn-ghost-red" href="#">Follow the Drop →</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <a class="footer-logo" href="#">VAN<span>IS</span>HED</a>
+    <p class="footer-copy">© 2026 Vanished. All rights reserved.</p>
+    <ul class="footer-links">
+      <li><a href="#">Instagram</a></li>
+      <li><a href="#">Contact</a></li>
+      <li><a href="#">FAQ</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+    });
+    function animateRing() {
+      rx += (mx - rx) * 0.1;
+      ry += (my - ry) * 0.1;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    revealEls.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
